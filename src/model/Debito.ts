@@ -1,11 +1,9 @@
-interface IDebito {
-  ejecutar: () => void
-}
+import { MetodoPago } from './Checkout'
 
-export class Debito implements IDebito {
+export class Debito implements MetodoPago {
   constructor (private tarjeta: string, private dni: string) { }
 
-  ejecutar () {
+  pagar () {
     console.log(`Transaccion generada con mercado pago. Se debitara de la tarjeta ${this.tarjeta}`)
   }
 }

@@ -1,16 +1,18 @@
-interface IMercadoPago {
-  ejecutar: () => void
-  notificar: () => void
-}
+import { MetodoPago } from './Checkout'
 
-export class MercadoPago implements IMercadoPago {
+export class MercadoPago implements MetodoPago {
   constructor (private account: string) { }
 
-  ejecutar () {
+  private ejecutar () {
     console.log(`Transaccion generada con mercado pago. Se debitara de la cuenta ${this.account}`)
   }
 
-  notificar () {
+  private notificar () {
     console.log('Notificacion realizada al cliente con exito.')
+  }
+
+  pagar () {
+    this.ejecutar()
+    this.notificar()
   }
 }

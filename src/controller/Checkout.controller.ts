@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
-import { Checkout } from '../model/Checkout'
+import { Checkout, MetodoPago } from '../model/Checkout'
+import { Debito } from '../model/Debito'
+import { MercadoPago } from '../model/MercadoPago'
 
 interface IBody {
     cuenta?: string
@@ -7,36 +9,50 @@ interface IBody {
     dni?: string
 }
 
+const MERCADO_PAGO = 'MERCADO_PAGO'
+const DEBITO = 'DEBITO'
+
 export const checkoutController = {
   run: (req: Request, res: Response) => {
     const tipo = req.params.tipo
 
-    if (!tipo) return res.status(400).json({ error: 'Se requiere un metodo de pago valido.' })
+    const checkout = new Checkout()
 
-    const body = req.body as IBody
+    const metodoPago = GeneradorMetodosPago(req, tipo)
 
-    switch (tipo) {
-      case 'MERCADO_PAGO': {
-        if (!body.cuenta) return res.status(400).json({ error: 'Se requiere un numero de cuenta valido.' })
+    if (!metodoPago) return res.status(400).json({ error: 'El metodo de pago no es soportado.' })
 
-        const checkout = new Checkout()
+    checkout.setMetodoPago(metodoPago)
 
-        checkout.pagoConMercadoPago(body.cuenta)
-        break
-      }
+    checkout.ejecutar()
 
-      case 'DEBITO': {
-        if (!body.tarjeta || !body.dni) return res.status(400).json({ error: 'Se requiere una tarjeta o dni valido.' })
-
-        const checkout = new Checkout()
-
-        checkout.pagoConDebito(body.tarjeta, body.dni)
-        break
-      }
-
-      default:
-        return res.status(400).json({ error: 'El metodo de pago no es soportado.' })
-    }
     res.json({ mensaje: 'Transaccion realizada correctamente.' })
   }
+}
+
+const GeneradorMetodosPago = (req: Request, tipo: string) => {
+  const body = req.body as IBody
+
+  let metodoPago: MetodoPago
+
+  switch (tipo) {
+    case MERCADO_PAGO: {
+      if (!body.cuenta) return undefined
+
+      metodoPago = new MercadoPago(body.cuenta)
+      break
+    }
+
+    case DEBITO: {
+      if (!body.tarjeta || !body.dni) return undefined
+
+      metodoPago = new Debito(body.tarjeta, body.dni)
+      break
+    }
+
+    default:
+      return undefined
+  }
+
+  return metodoPago
 }
